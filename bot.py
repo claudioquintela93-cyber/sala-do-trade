@@ -1,17 +1,16 @@
 import os
-import telebot
-import requests
-from google import genai
-from PIL import Image
 import io
+import base64
+import requests
+import telebot
+from PIL import Image
 from flask import Flask, request
 
 # Credenciais oficiais integradas
 TELEGRAM_TOKEN = "9140335855:AAGSfHodtC7AXbOa38Kzbop6wH8fqeWCp5g"
-GEMINI_API_KEY = "AQ.Ab8RN6I2_L9IUIvKm597mC8Vj4PL5Oq1n4VcYJzPQSsn93UPkA"
+GEMINI_API_KEY = "AQ.Ab8RN6KCPYZ_nltW9vaKJsVKN_YUcx2bJ0wyZ9VbyX-5-s-vkQ"
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
-client = genai.Client(api_key=GEMINI_API_KEY)
 app = Flask(__name__)
 
 def get_gold_price():
@@ -19,13 +18,14 @@ def get_gold_price():
         r = requests.get("https://api.gold-api.com/price/XAU", timeout=5)
         if r.status_code == 200:
             return float(r.json().get("price", 3876.40))
-    except:
+    except Exception:
         pass
     return 3876.40
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, 
+    bot.reply_to(
+        message, 
         "🏆 *Escritório do Ouro · Bot SMC com Visão IA Ativo*\n\n"
         "Envia o teu screenshot do MetaTrader/TradingView. Vou analisar os gráficos com IA visual, cruzar com o preço real e devolver o setup cirúrgico!"
     )
@@ -35,9 +35,12 @@ def handle_photo(message):
     try:
         bot.reply_to(message, "🔍 A aceder ao motor de Visão SMC e cotação Spot...")
         
+        # Obter e descarregar a imagem enviada
         file_info = bot.get_file(message.photo[-1].file_id)
         downloaded_file = bot.download_file(file_info.file_path)
-        image = Image.open(io.BytesIO(downloaded_file))
+        
+        # Converter para Base64 para envio via REST API
+        image_b64 = base64.b64encode(downloaded_file).decode('utf-8')
         
         current_price = get_gold_price()
         caption = message.caption if message.caption else "Análise H4 / Intraday XAU/USD"
@@ -53,15 +56,35 @@ def handle_photo(message):
             f"Formata a resposta de forma limpa e profissional para Telegram em Markdown."
         )
 
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=[image, prompt]
-        )
+        # Chamada REST direta à API da Google
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
         
-        bot.reply_to(message, response.text, parse_mode='Markdown')
+        payload = {
+            "contents": [{
+                "parts": [
+                    {"text": prompt},
+                    {
+                        "inline_data": {
+                            "mime_type": "image/jpeg",
+                            "data": image_b64
+                        }
+                    }
+                ]
+            }]
+        }
+
+        response = requests.post(url, json=payload, timeout=30)
+        res_json = response.json()
+
+        if response.status_code == 200:
+            analysis_text = res_json['candidates'][0]['content']['parts'][0]['text']
+            bot.reply_to(message, analysis_text, parse_mode='Markdown')
+        else:
+            error_msg = res_json.get('error', {}).get('message', 'Erro desconhecido na API da Google')
+            bot.reply_to(message, f"❌ Erro da API Gemini ({response.status_code}): {error_msg}")
         
     except Exception as e:
-        bot.reply_to(message, f"❌ Erro na análise visual: {str(e)}")
+        bot.reply_to(message, f"❌ Erro no processamento: {str(e)}")
 
 @app.route(f'/{TELEGRAM_TOKEN}', methods=['POST'])
 def webhook():
