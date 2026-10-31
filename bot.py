@@ -60,7 +60,12 @@ def handle_photo(message):
     except Exception as e:
         bot.reply_to(message, f"❌ Erro na análise visual: {str(e)}")
 
-print("Bot Avançado a correr...")
-bot.remove_webhook()  # Limpa qualquer conflito anterior no Telegram
-bot.infinity_polling()
+print("Bot Avançado a correr e a limpar sessões...")
+try:
+    bot.remove_webhook()
+except:
+    pass
+
+# O parâmetro skip_pending=True elimina qualquer conflito 409 pendente no Telegram
+bot.infinity_polling(skip_pending=True)
 
