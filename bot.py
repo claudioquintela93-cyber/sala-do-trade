@@ -5,9 +5,9 @@ import google.generativeai as genai
 from PIL import Image
 import io
 
-TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', '')
-# Aceita automaticamente GOOGLE_API_KEY ou GEMINI_API_KEY
-GEMINI_API_KEY = os.environ.get('GOOGLE_API_KEY', '') or os.environ.get('GEMINI_API_KEY', '')
+# Insere os teus dados diretamente aqui para evitar erros no Render
+TELEGRAM_TOKEN = "9191290675:AAGgYmfFxaeXw3PQfcfOEiYi5obMhF0TNwo"
+GEMINI_API_KEY = "AQ.Ab8RN6I2_L9IUIvKm597mC8Vj4PL5Oq1n4VcYJzPQSsn93UPkA"
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 genai.configure(api_key=GEMINI_API_KEY)
