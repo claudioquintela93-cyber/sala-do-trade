@@ -5,7 +5,7 @@ from PIL import Image
 import io
 
 # Insere os teus dados diretamente aqui para garantir 100% de estabilidade:
-TELEGRAM_TOKEN = "9140335855:AAGjj8Mu18YyAiWZwF-DHqUT4O7mphXGdto"
+TELEGRAM_TOKEN = "9140335855:AAGSfHodtC7AXbOa38Kzbop6wH8fqeWCp5g"
 GEMINI_API_KEY = "AQ.Ab8RN6I2_L9IUIvKm597mC8Vj4PL5Oq1n4VcYJzPQSsn93UPkA"
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
