@@ -6,7 +6,8 @@ from PIL import Image
 import io
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', '')
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+# Aceita automaticamente GOOGLE_API_KEY ou GEMINI_API_KEY
+GEMINI_API_KEY = os.environ.get('GOOGLE_API_KEY', '') or os.environ.get('GEMINI_API_KEY', '')
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 genai.configure(api_key=GEMINI_API_KEY)
