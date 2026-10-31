@@ -5,8 +5,8 @@ from google import genai
 from PIL import Image
 import io
 
-TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', '')
-GEMINI_API_KEY = os.environ.get('GOOGLE_API_KEY', '') or os.environ.get('GEMINI_API_KEY', '')
+TELEGRAM_TOKEN = os.environ.get('9140335855:AAGjj8Mu18YyAiWZwF-DHqUT4O7mphXGdto', '')
+GEMINI_API_KEY = os.environ.get('AQ.Ab8RN6I2_L9IUIvKm597mC8Vj4PL5Oq1n4VcYJzPQSsn93UPkA', '') or os.environ.get('GEMINI_API_KEY', '')
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 client = genai.Client(api_key=GEMINI_API_KEY)
