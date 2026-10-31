@@ -1,15 +1,18 @@
+import os
 import telebot
 import requests
 from google import genai
 from PIL import Image
 import io
+from flask import Flask, request
 
-# Insere os teus dados diretamente aqui para garantir 100% de estabilidade:
-TELEGRAM_TOKEN = "9140335855:AAGSfHodtC7AXbOa38Kzbop6wH8fqeWCp5g"
+# Credenciais integradas
+TELEGRAM_TOKEN = "9140335855:AAGjj8Mu18YyA4HJ7_DiL-IT1D7_LVCJdJA"
 GEMINI_API_KEY = "AQ.Ab8RN6I2_L9IUIvKm597mC8Vj4PL5Oq1n4VcYJzPQSsn93UPkA"
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 client = genai.Client(api_key=GEMINI_API_KEY)
+app = Flask(__name__)
 
 def get_gold_price():
     try:
@@ -60,11 +63,24 @@ def handle_photo(message):
     except Exception as e:
         bot.reply_to(message, f"❌ Erro na análise visual: {str(e)}")
 
-print("Trading Office Online...")
+# Rota do Webhook para receber as mensagens do Telegram
+@app.route(f'/{TELEGRAM_TOKEN}', methods=['POST'])
+def webhook():
+    json_str = request.get_data().astype(str) if hasattr(request.get_data(), 'astype') else request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_str)
+    bot.process_new_updates([update])
+    return "OK", 200
 
-try:
+@app.route('/')
+def index():
+    return "Trading Office Bot está online via Webhook!", 200
+
+if __name__ == "__main__":
+    # Configurar o Webhook automaticamente no Telegram
+    webhook_url = f"https://sala-do-trade.onrender.com/{TELEGRAM_TOKEN}"
     bot.remove_webhook()
-except:
-    pass
-
-bot.polling(none_stop=True, interval=0)
+    bot.set_webhook(url=webhook_url)
+    
+    # O Render atribui uma porta dinâmica através da variável PORT (por defeito 10000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
