@@ -1,4 +1,4 @@
 pyTelegramBotAPI
 requests
 Pillow
-google-genai
+google-generativeai
