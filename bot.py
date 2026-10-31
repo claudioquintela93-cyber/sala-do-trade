@@ -56,9 +56,15 @@ def handle_photo(message):
             f"Formata a resposta de forma limpa e profissional para Telegram em Markdown."
         )
 
-        # Chamada REST direta à API da Google
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+        # URL limpo sem o parâmetro ?key=
+        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
         
+        # Passar o token AQ. como Bearer Token no Header
+        headers = {
+            "Authorization": f"Bearer {GEMINI_API_KEY}",
+            "Content-Type": "application/json"
+        }
+
         payload = {
             "contents": [{
                 "parts": [
@@ -73,7 +79,7 @@ def handle_photo(message):
             }]
         }
 
-        response = requests.post(url, json=payload, timeout=30)
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
         res_json = response.json()
 
         if response.status_code == 200:
