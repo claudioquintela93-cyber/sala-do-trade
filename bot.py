@@ -1,54 +1,64 @@
 import os
 import telebot
 import requests
+from google import genai
+from PIL import Image
+import io
 
-TOKEN = os.environ.get('TELEGRAM_TOKEN', '9191290675:AAGgYmfFxaeXw3PQfcfOEiYi5obMhF0TNwo')
-bot = telebot.TeleBot(TOKEN)
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', '')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+
+bot = telebot.TeleBot(TELEGRAM_TOKEN)
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 def get_gold_price():
     try:
         r = requests.get("https://api.gold-api.com/price/XAU", timeout=5)
         if r.status_code == 200:
-            return float(r.json().get("price", 3873.61))
+            return float(r.json().get("price", 3876.40))
     except:
         pass
-    return 3873.61
+    return 3876.40
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     bot.reply_to(message, 
-        "🏆 *Escritório do Ouro · Bot Operacional Ativo*\n\n"
-        "Envia-me um screenshot do teu gráfico (MetaTrader / TradingView) com a tua dúvida. "
-        "Vou cruzar a imagem com o preço real de mercado e calcular o plano SMC instantaneamente!"
+        "🏆 *Escritório do Ouro · Bot SMC com Visão IA Ativo*\n\n"
+        "Envia o teu screenshot do MetaTrader/TradingView. Vou analisar os gráficos com IA visual, cruzar com o preço real e devolver o setup cirúrgico!"
     )
 
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
     try:
-        bot.reply_to(message, "🔍 A analisar o gráfico, a ler o preço de mercado e a calcular a estrutura SMC...")
+        bot.reply_to(message, "🔍 A aceder ao motor de Visão SMC e cotação Spot...")
+        
+        file_info = bot.get_file(message.photo[-1].file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+        image = Image.open(io.BytesIO(downloaded_file))
         
         current_price = get_gold_price()
-        caption = message.caption if message.caption else "Análise Intraday / H4"
+        caption = message.caption if message.caption else "Análise H4 / Intraday XAU/USD"
 
-        response_text = (
-            f"📊 *RELATÓRIO DO CONSELHO SMC*\n\n"
-            f"🏷️ *Notas do Trader:* {caption}\n"
-            f"💰 *Preço Spot Atual (XAU/USD):* ${current_price:.2f}\n\n"
-            f"🧠 *Análise Estrutural & POI:*\n"
-            f"• Estrutura institucional e mitigação detetada no gráfico enviado.\n"
-            f"• Viés técnico: Retração compradora suportada por zona de liquidez.\n\n"
-            f"🎯 *Plano de Execução Sugerido:*\n"
-            f"• *Entrada Recomendada:* ${current_price - 2.50:.2f} (Ordem Limit)\n"
-            f"• *Stop Loss:* ${current_price - 12.00:.2f} (35 pips)\n"
-            f"• *Take Profit:* ${current_price + 25.00:.2f} (75 pips)\n"
-            f"• *Risco:Retorno:* 1:2.1\n\n"
-            f"⚠️ *Checklist Pré-Trade:* Validada com sucesso."
+        prompt = (
+            f"És um analista institucional sénior de SMC (Smart Money Concepts) e ICT especializado em XAU/USD. "
+            f"O preço spot atual de mercado é ${current_price:.2f}. "
+            f"Analisa este gráfico enviado pelo trader (notas: {caption}). "
+            f"Fornece um relatório técnico detalhado e direto com:\n"
+            f"1. **Estrutura & POI:** Identifica a tendência macro/intraday, zonas de Order Block ou FVG visíveis.\n"
+            f"2. **Setup Sugerido (Entrada, SL, TP):** Calcula os valores exatos com base no preço atual e na estrutura do gráfico.\n"
+            f"3. **Gestão de Risco & R:R:** Indica o rácio risco-retorno.\n"
+            f"Formata a resposta de forma limpa e profissional para Telegram em Markdown."
+        )
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[image, prompt]
         )
         
-        bot.reply_to(message, response_text, parse_mode='Markdown')
+        bot.reply_to(message, response.text, parse_mode='Markdown')
         
     except Exception as e:
-        bot.reply_to(message, f"Ocorreu um erro ao processar a imagem: {str(e)}")
+        bot.reply_to(message, f"❌ Erro na análise visual: {str(e)}")
 
-print("Bot do Escritório do Ouro a arrancar...")
+print("Bot Avançado a correr...")
 bot.infinity_polling()
