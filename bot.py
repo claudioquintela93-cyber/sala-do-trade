@@ -1,7 +1,7 @@
 import os
 import telebot
 import requests
-from google import genai
+import google.generativeai as genai
 from PIL import Image
 import io
 
@@ -9,7 +9,7 @@ TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', '')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
-client = genai.Client(api_key=GEMINI_API_KEY)
+genai.configure(api_key=GEMINI_API_KEY)
 
 def get_gold_price():
     try:
@@ -50,10 +50,8 @@ def handle_photo(message):
             f"Formata a resposta de forma limpa e profissional para Telegram em Markdown."
         )
 
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=[image, prompt]
-        )
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content([prompt, image])
         
         bot.reply_to(message, response.text, parse_mode='Markdown')
         
