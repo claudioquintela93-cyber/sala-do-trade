@@ -1,16 +1,15 @@
 import os
 import telebot
 import requests
-import google.generativeai as genai
+from google import genai
 from PIL import Image
 import io
 
-# Insere os teus dados diretamente aqui para evitar erros no Render
-TELEGRAM_TOKEN = "9191290675:AAGgYmfFxaeXw3PQfcfOEiYi5obMhF0TNwo"
-GEMINI_API_KEY = "AQ.Ab8RN6I2_L9IUIvKm597mC8Vj4PL5Oq1n4VcYJzPQSsn93UPkA"
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', '')
+GEMINI_API_KEY = os.environ.get('GOOGLE_API_KEY', '') or os.environ.get('GEMINI_API_KEY', '')
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
-genai.configure(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 def get_gold_price():
     try:
@@ -51,8 +50,10 @@ def handle_photo(message):
             f"Formata a resposta de forma limpa e profissional para Telegram em Markdown."
         )
 
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content([prompt, image])
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[image, prompt]
+        )
         
         bot.reply_to(message, response.text, parse_mode='Markdown')
         
